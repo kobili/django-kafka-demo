@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:14
+    ports:
+      - 3432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dev
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pgData:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dev"]
+      interval: 2s
+      timeout: 2s
+      retries: 0
+    networks:
+      - django-starter
+
+  django:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 app/django-app/manage.py runserver 0.0.0.0:8000
+    build:
+      context: ./
+      dockerfile: ./docker/django/Dockerfile
+    ports:
+      - 8000:8000
+      - 5678:5678
+    environment:
+      - POSTGRES_DB_NAME=dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - DEBUG=true
+    volumes:
+      - ./django-app:/app/django-app
+    networks:
+      - django-starter
+
+networks:
+  django-starter:
+    driver: bridge
