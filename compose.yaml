@@ -27,6 +27,11 @@ services:
       - 9093:9093
     volumes:
       - ./kafkaLogs:/tmp/kraft-combined-logs
+    healthcheck:
+      test: ["CMD", "./opt/kafka/bin/kafka-topics.sh", "--list", "--bootstrap-server", "kafka:9092"]
+      interval: 2s
+      timeout: 5s
+      retries: 0
     environment:
       # TODO: Read up - https://hub.docker.com/r/apache/kafka
       KAFKA_NODE_ID: 1
@@ -47,6 +52,8 @@ services:
   django:
     depends_on:
       postgres:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     command: python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 app/django-app/manage.py runserver 0.0.0.0:8000
     build:
