@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "django-starter"
+name = "django-kafka-demo"
 version = "0.1.0"
 description = ""
 authors = ["Kobe Li <likobe23@gmail.com>"]
