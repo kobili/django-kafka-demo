@@ -26,7 +26,7 @@ services:
       - 9092:9092
       - 9093:9093
     volumes:
-      - ./kafkaLogs:/tmp/kraft-combined-logs
+      - ./kafkaLogs:/tmp/kafka-logs
     healthcheck:
       test: ["CMD", "./opt/kafka/bin/kafka-topics.sh", "--list", "--bootstrap-server", "kafka:9092"]
       interval: 2s
