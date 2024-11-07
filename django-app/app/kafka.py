@@ -11,7 +11,11 @@ def _kafka_delivery_callback(err, msg):
     if err:
         print("ERROR: Event failed delivery: {}".format(err))
     else:
-        print("Produced event {key} to topic {topic}: {value}".format(key=msg.key().decode("utf-8"), topic=msg.topic(), value=msg.value().decode("utf-8")))
+        print("Produced event with key {key} to topic {topic}: {value}".format(
+            key=msg.key().decode("utf-8"),
+            topic=msg.topic(),
+            value=msg.value().decode("utf-8"),
+        ))
 
 
 KAFKA_TOPIC_USER_UPDATED = "user-updated"

@@ -22,4 +22,5 @@ class User(models.Model):
         producer.produce(
             KAFKA_TOPIC_USER_UPDATED,
             value=json.dumps(kafka_event),
+            key=str(self.id),
         )
