@@ -1,1 +1,2 @@
 docker compose exec kafka ./opt/kafka/bin/kafka-topics.sh --create --topic user-created --bootstrap-server kafka:9092
+docker compose exec kafka ./opt/kafka/bin/kafka-topics.sh --create --topic user-updated --bootstrap-server kafka:9092
