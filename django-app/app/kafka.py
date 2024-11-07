@@ -1,5 +1,8 @@
 import json
+from uuid import uuid4 as uuid
+
 from confluent_kafka import Producer
+
 
 # TODO: Move this stuff into a separate "kafka" app
 
@@ -8,7 +11,7 @@ def _kafka_delivery_callback(err, msg):
     if err:
         print("ERROR: Event failed delivery: {}".format(err))
     else:
-        print("Produced event to topic {topic}: {value}".format(topic=msg.topic(), value=msg.value().decode("utf-8")))
+        print("Produced event {key} to topic {topic}: {value}".format(key=msg.key().decode("utf-8"), topic=msg.topic(), value=msg.value().decode("utf-8")))
 
 
 KAFKA_TOPIC_USER_UPDATED = "user-updated"
@@ -19,6 +22,9 @@ class KafkaProducer:
         self.producer = Producer(kafka_config)
 
     def produce(self, topic: str, value: dict | str, key: str=None) -> None:
+        if key is None:
+            key = str(uuid())
+
         if isinstance(value, dict):
             value = json.dumps(value)
 
