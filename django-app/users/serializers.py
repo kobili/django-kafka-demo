@@ -15,7 +15,17 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
-class UserKafkaSyncSerializer(UserSerializer):
+class UserKafkaSyncSerializer(serializers.ModelSerializer):
     """
     A serializer that fetches all the data to send to the `user-created` and `user-updated` kafka topics
     """
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+        ]
