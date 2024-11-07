@@ -19,3 +19,6 @@ mm: makemigrations
 migrate:
 	docker compose run --rm django python /app/django-app/manage.py migrate
 m: migrate
+
+kafka-consumer:
+	docker compose exec kafka ./opt/kafka/bin/kafka-console-consumer.sh --topic ${topic} --from-beginning --bootstrap-server kafka:9092
