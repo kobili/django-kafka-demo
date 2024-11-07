@@ -1,7 +1,7 @@
 import json
 from confluent_kafka import Producer
 
-# TODO: Move this stuff into a separa "kafka" app
+# TODO: Move this stuff into a separate "kafka" app
 
 def _kafka_delivery_callback(err, msg):
     # TODO: make this create an audit log or something
@@ -11,7 +11,6 @@ def _kafka_delivery_callback(err, msg):
         print("Produced event to topic {topic}: {value}".format(topic=msg.topic(), value=msg.value().decode("utf-8")))
 
 
-KAFKA_TOPIC_USER_CREATED = "user-created"
 KAFKA_TOPIC_USER_UPDATED = "user-updated"
 
 

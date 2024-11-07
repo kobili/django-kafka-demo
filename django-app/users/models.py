@@ -1,7 +1,7 @@
 import json
 from django.db import models
 
-from app.kafka import producer, KAFKA_TOPIC_USER_CREATED, KAFKA_TOPIC_USER_UPDATED
+from app.kafka import producer, KAFKA_TOPIC_USER_UPDATED
 
 # Create your models here.
 class User(models.Model):
@@ -16,9 +16,10 @@ class User(models.Model):
         creating = self._state.adding
         super().save(*args, **kwargs)
 
-        kafka_event = json.dumps(UserKafkaSyncSerializer(instance=self).data)
-        kafka_topic = KAFKA_TOPIC_USER_CREATED if creating else KAFKA_TOPIC_USER_UPDATED
+        kafka_event = UserKafkaSyncSerializer(instance=self).data
+        kafka_event["creating"] = creating
 
-        producer.produce(kafka_topic, value=kafka_event)
-
-        return
+        producer.produce(
+            KAFKA_TOPIC_USER_UPDATED,
+            value=json.dumps(kafka_event),
+        )
