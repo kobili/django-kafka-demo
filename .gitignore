@@ -2,4 +2,5 @@
 **/__pycache__/
 
 pgData/
+pgData-other/
 kafkaLogs/
