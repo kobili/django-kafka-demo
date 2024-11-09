@@ -1,9 +1,10 @@
 import json
 from django.db import models
 
-from app.kafka import producer, KAFKA_TOPIC_USER_UPDATED
+from users.constants import KAFKA_TOPIC_USER_UPDATED
+from app.kafka import producer
 
-# Create your models here.
+
 class User(models.Model):
     username = models.CharField(unique=True)
     email = models.CharField(unique=True)
@@ -21,6 +22,6 @@ class User(models.Model):
 
         producer.produce(
             KAFKA_TOPIC_USER_UPDATED,
-            value=json.dumps(kafka_event),
             key=str(self.id),
+            value=json.dumps(kafka_event),
         )
