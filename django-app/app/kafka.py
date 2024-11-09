@@ -1,7 +1,9 @@
+from django.conf import settings
+
 from kafka.client import KafkaProducer
 
 
 producer = KafkaProducer({
-    "bootstrap.servers": "kafka:9092", # TODO: move to ENV
+    "bootstrap.servers": settings.KAFKA_BOOTSTRAP_SERVERS,
     "acks": "all",
 })
