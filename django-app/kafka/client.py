@@ -31,7 +31,5 @@ class KafkaProducer:
             value = json.dumps(value)
 
         self.producer.produce(topic, value=value, key=key, callback=_create_delivery_log)
-        self.producer.poll(10)
 
-        # TODO: see if there's a better way to do this; ie: we shouldn't be flushing on every event published
         self.producer.flush()
