@@ -14,12 +14,14 @@ class Command(BaseCommand):
         self.running = True
 
     def handle(self, *args, **options):
-        # TODO: Consume kafka events here
         while self.running:
+            # TODO: Consume kafka events here
             print("running...")
+        
+        # TODO: Perform shutdown events here; cleanup kafka client; commit kafka consumer offsets
+        print("done!")
 
     def terminate(self, signum, frame):
-        # TODO: Perform shutdown events here; cleanup kafka client; commit kafka consumer offsets
+        print(f"received signal: {signum}")
         self.running = False
-        print("done!")
 
