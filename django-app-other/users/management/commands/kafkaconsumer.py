@@ -1,10 +1,13 @@
 import signal
+import json
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
 
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from users.constants import KAFKA_TOPIC_USER_UPDATED
+from users.models import ExternalUser
+from kafka.models import KafkaConsumerLog
 
 
 class Command(BaseCommand):
@@ -21,14 +24,18 @@ class Command(BaseCommand):
         # start kafka consumer
         consumer = Consumer({
             "bootstrap.servers": settings.KAFKA_BOOTSTRAP_SERVERS,
-            "group.id": "foo-consumer",
+            "group.id": "django-other-user-consumer",
             "auto.offset.reset": "earliest",
             'enable.auto.commit': "true",
+            "auto.commit.interval.ms": 5000,
             'enable.auto.offset.store': "false",
         })
+        print("connected to consumer")
 
         try:
-            consumer.subscribe([KAFKA_TOPIC_USER_UPDATED])
+            topics = [KAFKA_TOPIC_USER_UPDATED]
+            consumer.subscribe(topics)
+            print(f"subscribed to topics: {topics}")
 
             while self.running:
                 msg = consumer.poll(timeout=1.0)
@@ -44,15 +51,10 @@ class Command(BaseCommand):
                         raise KafkaException(msg.error())
                 
                 else:
-                    # Create/update users
-                    print({
-                        "topic": msg.topic(),
-                        "key": msg.key().decode("utf-8"),
-                        "value": msg.value().decode("utf-8"),
-                    })
+                    self.process_user_event(msg)
+                    consumer.store_offsets(msg)
 
         finally:
-            # TODO: Perform shutdown events here; cleanup kafka client; commit kafka consumer offsets
             print("closing consumer")
             consumer.close()
 
@@ -61,4 +63,26 @@ class Command(BaseCommand):
     def terminate(self, signum, frame):
         print(f"received signal: {signum}")
         self.running = False
+
+    def process_user_event(self, msg):
+        event = {
+            "event_topic": msg.topic(),
+            "event_key": msg.key().decode("utf-8"),
+            "event_value": msg.value().decode("utf-8"),
+        }
+        print(f"processing event: {event}")
+        consumption_log = KafkaConsumerLog(**event)
+
+        try:
+            payload = json.loads(msg.value().decode("utf-8"))
+
+            external_id = payload.pop("id")
+
+            ExternalUser.objects.update_or_create(source_id=external_id, defaults=payload)
+        except Exception as e:
+            consumption_log.error_message = str(e)
+            consumption_log.is_success = False
+        
+        finally:
+            consumption_log.save()
 

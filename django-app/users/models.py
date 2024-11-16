@@ -13,12 +13,9 @@ class User(models.Model):
 
     def save(self, *args, **kwargs):
         from users.serializers import UserKafkaSyncSerializer
-
-        creating = self._state.adding
         super().save(*args, **kwargs)
 
         kafka_event = UserKafkaSyncSerializer(instance=self).data
-        kafka_event["creating"] = creating
 
         producer.produce(
             KAFKA_TOPIC_USER_UPDATED,
