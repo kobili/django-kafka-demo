@@ -23,6 +23,12 @@ class KafkaConsumerLog(models.Model):
     event_topic = models.CharField(max_length=100, db_index=True)
     event_key = models.CharField(max_length=100, null=True, blank=True)
     event_value = models.TextField()
+    consumer_group_id = models.CharField(
+        max_length=250,
+        null=True,
+        blank=True,
+        help_text="The consumer group that handled the event.",
+    )
 
     is_success = models.BooleanField(default=True)
 

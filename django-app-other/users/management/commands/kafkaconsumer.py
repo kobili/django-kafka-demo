@@ -18,45 +18,47 @@ class Command(BaseCommand):
         signal.signal(signal.SIGINT, self.terminate)
         signal.signal(signal.SIGTERM, self.terminate)
 
-        self.running = True
+        self._consumer_group_id = "django-other-user-consumer"
 
-    def handle(self, *args, **options):
-        # start kafka consumer
-        consumer = Consumer({
+        self.consumer = Consumer({
             "bootstrap.servers": settings.KAFKA_BOOTSTRAP_SERVERS,
-            "group.id": "django-other-user-consumer",
+            "group.id": self._consumer_group_id,
             "auto.offset.reset": "earliest",
             'enable.auto.commit': "true",
             "auto.commit.interval.ms": 5000,
             'enable.auto.offset.store': "false",
         })
-        print("connected to consumer")
 
+        self.running = True
+
+    def handle(self, *args, **options):
         try:
+            print(f"Consumer Group ID: {self._consumer_group_id}")
+
             topics = [KAFKA_TOPIC_USER_UPDATED]
-            consumer.subscribe(topics)
+            self.consumer.subscribe(topics)
             print(f"subscribed to topics: {topics}")
 
             while self.running:
-                msg = consumer.poll(timeout=1.0)
+                msg = self.consumer.poll(timeout=1.0)
 
                 if msg is None:
                     # Continue polling if there are no messages
                     continue
 
                 if msg.error():
-                    if msg.error().code() == KafkaError.__PARTITION_EOF:
+                    if msg.error().code() == KafkaError._PARTITION_EOF:
                         print("No messages in partition")
                     else:
                         raise KafkaException(msg.error())
                 
                 else:
                     self.process_user_event(msg)
-                    consumer.store_offsets(msg)
+                    self.consumer.store_offsets(msg)
 
         finally:
             print("closing consumer")
-            consumer.close()
+            self.consumer.close()
 
             print("done!")
 
@@ -71,7 +73,7 @@ class Command(BaseCommand):
             "event_value": msg.value().decode("utf-8"),
         }
         print(f"processing event: {event}")
-        consumption_log = KafkaConsumerLog(**event)
+        consumption_log = KafkaConsumerLog(consumer_group_id=self._consumer_group_id, **event)
 
         try:
             payload = json.loads(msg.value().decode("utf-8"))
