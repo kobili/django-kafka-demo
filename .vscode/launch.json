@@ -20,6 +20,23 @@
             ],
             "justMyCode": false,
             "django": true
+        },
+        {
+            "name": "Debug Other Django",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5679
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/django-app-other/",
+                    "remoteRoot": "/app/django-app/"
+                }
+            ],
+            "justMyCode": false,
+            "django": true
         }
     ]
 }

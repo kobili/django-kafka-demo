@@ -75,6 +75,51 @@ services:
     networks:
       - django-starter
 
+  postgres-other:
+    image: postgres:14
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=dev
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./pgData-other:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dev"]
+      interval: 2s
+      timeout: 2s
+      retries: 0
+    networks:
+      - django-starter
+
+  django-other:
+    depends_on:
+      postgres-other:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    command: python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5679 app/django-app/manage.py runserver 0.0.0.0:8500
+    build:
+      context: ./
+      dockerfile: ./docker/django/Dockerfile
+    ports:
+      - 8500:8500
+      - 5679:5679
+    environment:
+      - POSTGRES_DB_NAME=dev
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST=postgres-other
+      - POSTGRES_PORT=5432
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - DEBUG=true
+    volumes:
+      - ./django-app-other:/app/django-app
+    networks:
+      - django-starter
+
 networks:
   django-starter:
     driver: bridge
